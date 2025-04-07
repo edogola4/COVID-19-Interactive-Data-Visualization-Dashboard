@@ -29,12 +29,14 @@ The COVID-19 Interactive Data Visualization Dashboard is a comprehensive web app
 ### Installation
 
 1. Clone the repository
+
    ```bash
    git clone https://github.com/yourusername/covid-dashboard.git
    cd covid-dashboard
    ```
 
 2. Install dependencies
+
    ```bash
    npm install
    # or
@@ -42,12 +44,14 @@ The COVID-19 Interactive Data Visualization Dashboard is a comprehensive web app
    ```
 
 3. Create a `.env` file in the root directory with the following content:
+
    ```
    REACT_APP_COVID_API_URL=https://disease.sh/v3
    REACT_APP_VACCINATION_API_URL=https://raw.githubusercontent.com/owid/covid-19-data/master/public/data
    ```
 
 4. Start the development server
+
    ```bash
    npm start
    # or
@@ -130,4 +134,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [React Redux](https://react-redux.js.org/)
 - [Johns Hopkins University](https://coronavirus.jhu.edu/map.html) for COVID-19 data
 - [World Health Organization](https://www.who.int/) for health information and guidelines
-- [Geo Countries](https://github.com/datasets/geo-countries/tree/main) 
+- [Geo Countries](https://github.com/datasets/geo-countries/tree/main)
