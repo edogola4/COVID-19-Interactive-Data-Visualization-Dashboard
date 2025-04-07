@@ -130,3 +130,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [React Redux](https://react-redux.js.org/)
 - [Johns Hopkins University](https://coronavirus.jhu.edu/map.html) for COVID-19 data
 - [World Health Organization](https://www.who.int/) for health information and guidelines
+- [Geo Countries](https://github.com/datasets/geo-countries/tree/main) 
