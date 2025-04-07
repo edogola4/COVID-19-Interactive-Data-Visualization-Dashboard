@@ -1,29 +1,37 @@
-// eslint-disable-next-line no-unused-vars
 import React, { useEffect } from 'react';
-import { Provider } from 'react-redux';
-import store from './redux/store';
-import Dashboard from './components/dashboard/Dashboard';
+import { useSelector } from 'react-redux';
 import Header from './components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+import Dashboard from './components/dashboard/Dashboard';
 import Footer from './components/layout/Footer';
-import useFetch from './hooks/useFetch';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import './styles/global.css';
 
-const AppContent = () => {
-  useFetch();
-  return (
-    <>
-      <Header />
-      <Dashboard />
-      <Footer />
-    </>
-  );
-};
-
 const App = () => {
+  const { darkMode } = useSelector(state => state.ui);
+  
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
+  
   return (
-    <Provider store={store}>
-      <AppContent />
-    </Provider>
+    <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
+      <Header />
+      <div className="main-content">
+        <Sidebar />
+        <main className="dashboard-container">
+          <ErrorBoundary>
+            <Dashboard />
+          </ErrorBoundary>
+        </main>
+      </div>
+      <Footer />
+    </div>
   );
 };
 

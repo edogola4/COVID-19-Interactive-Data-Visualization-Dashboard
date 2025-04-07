@@ -1,10 +1,10 @@
 // src/constants/apiEndpoints.js
 /**
  * API endpoints for COVID-19 data
- * Using Disease.sh (https://disease.sh/) as the primary data source
+ * Using disease.sh API (https://disease.sh/)
  */
 
-export const BASE_URL = 'https://disease.sh/v3/covid-19';
+const BASE_URL = 'https://disease.sh/v3/covid-19';
 
 export const ENDPOINTS = {
   // Global data
@@ -14,29 +14,31 @@ export const ENDPOINTS = {
   COUNTRIES: `${BASE_URL}/countries`,
   COUNTRY: (country) => `${BASE_URL}/countries/${country}`,
   
-  // Historical data for time-series charts
-  HISTORICAL_ALL: `${BASE_URL}/historical/all`,
-  HISTORICAL_COUNTRY: (country, days = 30) => 
-    `${BASE_URL}/historical/${country}?lastdays=${days}`,
-  
-  // Vaccine data
-  VACCINE: `${BASE_URL}/vaccine/coverage`,
-  VACCINE_COUNTRY: (country) => 
-    `${BASE_URL}/vaccine/coverage/countries/${country}`,
+  // Historical data
+  HISTORICAL_ALL: (lastDays = 'all') => `${BASE_URL}/historical/all?lastdays=${lastDays}`,
+  HISTORICAL_COUNTRY: (country, lastDays = 'all') => `${BASE_URL}/historical/${country}?lastdays=${lastDays}`,
   
   // Continent data
   CONTINENTS: `${BASE_URL}/continents`,
+  CONTINENT: (continent) => `${BASE_URL}/continents/${continent}`,
+  
+  // Vaccine data
+  VACCINE: `${BASE_URL}/vaccine/coverage`,
+  VACCINE_COUNTRY: (country) => `${BASE_URL}/vaccine/coverage/countries/${country}`,
+  
+  // Testing data
+  TEST_COUNTRIES: `${BASE_URL}/tests`,
 };
 
-// Secondary API for more detailed vaccination data
-export const VACCINATION_API = {
-  BASE: 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations',
-  LATEST: 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.json',
+// Alternative APIs for fallback or additional data
+export const ALTERNATIVE_ENDPOINTS = {
+  JHU_BASE: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series',
+  WHO_BASE: 'https://covid19.who.int/WHO-COVID-19-global-data.csv',
+  
+  // JHU time series data
+  JHU_CONFIRMED: `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv`,
+  JHU_DEATHS: `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv`,
+  JHU_RECOVERED: `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv`,
 };
 
-// JHU CSSE historical time series data (alternative source)
-export const JHU_TIMESERIES = {
-  CONFIRMED: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
-  DEATHS: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv',
-  RECOVERED: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv',
-};
+export default ENDPOINTS;

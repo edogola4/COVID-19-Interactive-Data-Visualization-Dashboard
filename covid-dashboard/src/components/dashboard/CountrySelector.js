@@ -1,24 +1,44 @@
 // src / components / dashboard / CountrySelector.js
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import Filter from '../common/Filter';
-import { setSelectedCountry } from '../../redux/actions/dataActions';
+import React, { useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedCountry } from '../../redux/actions/uiActions';
+import '../../styles/components/dashboard.css';
 
 const CountrySelector = () => {
   const dispatch = useDispatch();
-  const countries = useSelector((state) => state.data.countries);
-  const selectedCountry = useSelector((state) => state.data.selectedCountry);
-
-  const options = countries.map((country) => ({
-    value: country,
-    label: country,
-  }));
-
-  const handleChange = (value) => {
-    dispatch(setSelectedCountry(value));
+  const { countriesData } = useSelector(state => state.data);
+  const { selectedCountry } = useSelector(state => state.ui);
+  
+  const sortedCountries = useMemo(() => {
+    if (!countriesData) return [];
+    
+    return [...countriesData]
+      .sort((a, b) => a.country.localeCompare(b.country))
+      .map(country => country.country);
+  }, [countriesData]);
+  
+  const handleCountryChange = (e) => {
+    const country = e.target.value;
+    dispatch(setSelectedCountry(country === 'Global' ? null : country));
   };
-
-  return <Filter options={options} value={selectedCountry} onChange={handleChange} />;
+  
+  return (
+    <div className="country-selector">
+      <label htmlFor="country-select">Select Country:</label>
+      <select 
+        id="country-select"
+        value={selectedCountry || 'Global'}
+        onChange={handleCountryChange}
+      >
+        <option value="Global">Global</option>
+        {sortedCountries.map(country => (
+          <option key={country} value={country}>
+            {country}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 };
 
-export default CountrySelector;
+export default React.memo(CountrySelector);
