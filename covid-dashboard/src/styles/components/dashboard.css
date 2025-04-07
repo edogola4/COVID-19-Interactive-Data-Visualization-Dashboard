@@ -1,0 +1,185 @@
+@import '../variables.css';
+
+.dashboard {
+  height: 100%;
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background-color: var(--background-main);
+}
+
+.dashboard-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-title {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.dashboard-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: var(--spacing-lg);
+}
+
+.stats-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.stats-card {
+  height: 140px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: var(--border-radius-md);
+  transition: transform var(--transition-medium);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+}
+
+.stats-card-confirmed {
+  background-color: rgba(255, 152, 0, 0.1);
+  border-left: 4px solid var(--confirmed-color);
+}
+
+.stats-card-active {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-left: 4px solid var(--active-color);
+}
+
+.stats-card-recovered {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid var(--recovered-color);
+}
+
+.stats-card-deaths {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid var(--deaths-color);
+}
+
+.stats-card-vaccinated {
+  background-color: rgba(156, 39, 176, 0.1);
+  border-left: 4px solid var(--vaccinated-color);
+}
+
+.stats-card-title {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.stats-card-number {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.stats-card-subtitle {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.trend-up {
+  color: var(--deaths-color);
+}
+
+.trend-down {
+  color: var(--recovered-color);
+}
+
+.chart-container {
+  background-color: var(--background-card);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-light);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.chart-header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--primary-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-body {
+  padding: var(--spacing-md);
+  height: 400px;
+  position: relative;
+}
+
+.country-selector {
+  min-width: 200px;
+}
+
+.date-range-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .stats-cards-container {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .chart-body {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: var(--spacing-md);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .chart-body {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-cards-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-card {
+    height: auto;
+    padding: var(--spacing-sm);
+  }
+  
+  .chart-body {
+    height: 250px;
+  }
+}
