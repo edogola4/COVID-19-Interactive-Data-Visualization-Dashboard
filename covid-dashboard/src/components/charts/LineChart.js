@@ -1,276 +1,254 @@
 // src / components / charts / LineChart.js
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as d3 from 'd3';
-import { useResponsive } from '../../hooks/useResponsive';
-import { CHART_CONFIGS } from '../../constants/chartConfigs';
+import { useSelector } from 'react-redux';
+import { formatDate, formatNumber } from '../../utils/formatters';
 import '../../styles/components/charts.css';
 
-const MergedLineChart = ({
+const LineChart = ({
   data,
-  width = CHART_CONFIGS?.LINE_CHART?.width || 800,
-  height = CHART_CONFIGS?.LINE_CHART?.height || 400,
-  margin = CHART_CONFIGS?.LINE_CHART?.margin || { top: 20, right: 30, bottom: 50, left: 60 },
-  metrics = ['confirmed', 'active', 'recovered', 'deaths'],
-  title = 'COVID-19 Time Series',
-  enableBrush = true,
-  showTooltip = true
+  width = 800,
+  height = 400,
+  margin = { top: 20, right: 80, bottom: 50, left: 60 },
+  metrics = [{ id: 'cases', color: '#e41a1c', label: 'Cases' }],
+  timeFrame = 'all'
 }) => {
-  const svgRef = useRef(null);
-  const tooltipRef = useRef(null);
-  const brushRef = useRef(null);
-  const { isMobile } = useResponsive();
-  const [currentData, setCurrentData] = useState([]);
-  const [activeMetrics, setActiveMetrics] = useState(metrics);
+  const chartRef = useRef();
+  const tooltipRef = useRef();
+  const brushRef = useRef();
+  const theme = useSelector(state => state.ui.theme);
+  // eslint-disable-next-line no-unused-vars
+  const [hoveredDate, setHoveredDate] = useState(null);
 
-  // Stabilize the colorMap using useMemo
-  const colorMap = useMemo(() => ({
-    confirmed: 'var(--confirmed-color)',
-    active: 'var(--active-color)',
-    recovered: 'var(--recovered-color)',
-    deaths: 'var(--deaths-color)',
-    vaccinated: 'var(--vaccinated-color)',
-    // fallback if using "value" only data
-    value: '#007bff'
-  }), []);
+  // Derived dimensions
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
-  // Process data when it changes: sort by date (ascending)
+  // Memo scales
+  const scales = useMemo(() => {
+    if (!data || data.length === 0) return null;
+    
+    // Filter by time frame if needed
+    let filteredData = data;
+    if (timeFrame !== 'all') {
+      const now = new Date();
+      const pastDate = new Date();
+      const days = timeFrame === 'month' ? 30 : 
+                  timeFrame === '3months' ? 90 : 
+                  timeFrame === '6months' ? 180 : 365;
+      pastDate.setDate(now.getDate() - days);
+      filteredData = data.filter(d => new Date(d.date) >= pastDate);
+    }
+    
+    const x = d3.scaleTime()
+      .domain(d3.extent(filteredData, d => new Date(d.date)))
+      .range([0, innerWidth]);
+    
+    const y = d3.scaleLinear()
+      .domain([
+        0,
+        d3.max(filteredData, d => {
+          return Math.max(...metrics.map(metric => d[metric.id] || 0));
+        }) * 1.1 // Add 10% padding
+      ])
+      .range([innerHeight, 0]);
+      
+    return { x, y, filteredData };
+  }, [data, innerWidth, innerHeight, timeFrame, metrics]);
+
   useEffect(() => {
-    if (!data || data.length === 0) return;
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    setCurrentData(sortedData);
-  }, [data]);
-
-  // Toggle metrics on/off when clicking the legend
-  const toggleMetric = (metric) => {
-    setActiveMetrics(prev =>
-      prev.includes(metric) ? prev.filter(m => m !== metric) : [...prev, metric]
-    );
-  };
-
-  // Render the line chart
-  useEffect(() => {
-    if (!currentData || currentData.length === 0 || !svgRef.current) return;
-
+    if (!scales || !data || data.length === 0) return;
+    
+    const svg = d3.select(chartRef.current);
+    const tooltip = d3.select(tooltipRef.current);
+    const { x, y, filteredData } = scales;
+    
     // Clear previous chart
-    d3.select(svgRef.current).selectAll('*').remove();
-
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    // Main SVG group
-    const svg = d3.select(svgRef.current)
+    svg.selectAll('*').remove();
+    
+    // Add chart group
+    const g = svg
       .attr('width', width)
       .attr('height', height)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // X scale (time)
-    const xScale = d3.scaleTime()
-      .domain(d3.extent(currentData, d => new Date(d.date)))
-      .range([0, innerWidth]);
-
-    // Compute maximum y value across active metrics
-    const yMax = d3.max(currentData, d => 
-      d3.max(activeMetrics, metric => d[metric] || 0)
-    ) || 0;
-
-    const yScale = d3.scaleLinear()
-      .domain([0, yMax])
-      .nice()
-      .range([innerHeight, 0]);
-
-    // Add X grid lines
-    svg.append('g')
-      .attr('class', 'grid')
-      .attr('transform', `translate(0,${innerHeight})`)
-      .call(
-        d3.axisBottom(xScale)
-          .ticks(isMobile ? 5 : 10)
-          .tickSize(-innerHeight)
-          .tickFormat('')
-      );
-
-    // Add Y grid lines
-    svg.append('g')
-      .attr('class', 'grid')
-      .call(
-        d3.axisLeft(yScale)
-          .ticks(5)
-          .tickSize(-innerWidth)
-          .tickFormat('')
-      );
-
-    // X Axis
-    svg.append('g')
-      .attr('class', 'axis x-axis')
-      .attr('transform', `translate(0,${innerHeight})`)
-      .call(
-        d3.axisBottom(xScale)
-          .ticks(isMobile ? 5 : 10)
-          .tickFormat(d => d3.timeFormat('%b %d')(d))
-      )
-      .selectAll('text')
-      .style('text-anchor', 'end')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
-      .attr('transform', 'rotate(-45)');
-
-    // Y Axis
-    svg.append('g')
-      .attr('class', 'axis y-axis')
-      .call(
-        d3.axisLeft(yScale)
-          .ticks(5)
-          .tickFormat(d => {
-            if (d >= 1000000) return `${(d / 1000000).toFixed(1)}M`;
-            if (d >= 1000) return `${(d / 1000).toFixed(1)}K`;
-            return d;
-          })
-      );
-
-    // Line and area generators
+    
+    // Create line generator
     const line = d3.line()
-      .x(d => xScale(new Date(d.date)))
-      .y(d => yScale(d.value))
+      .x(d => x(new Date(d.date)))
+      .y(d => y(d.value))
       .curve(d3.curveMonotoneX);
-
-    const area = d3.area()
-      .x(d => xScale(new Date(d.date)))
-      .y0(innerHeight)
-      .y1(d => yScale(d.value))
-      .curve(d3.curveMonotoneX);
-
-    // Tooltip setup
-    const tooltip = showTooltip ? d3.select(tooltipRef.current) : null;
-    const tooltipLine = svg.append('line')
-      .attr('class', 'tooltip-line')
+    
+    // Add axes
+    g.append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(x).ticks(5))
+      .selectAll('text')
+      .style('text-anchor', 'middle')
+      .style('font-size', '12px');
+    
+    g.append('g')
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d => formatNumber(d)))
+      .style('font-size', '12px');
+    
+    // Add grid lines
+    g.append('g')
+      .attr('class', 'grid')
+      .call(d3.axisLeft(y)
+        .ticks(5)
+        .tickSize(-innerWidth)
+        .tickFormat(''))
+      .selectAll('line')
+      .style('stroke', theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)');
+    
+    // Add lines for each metric
+    metrics.forEach((metric, i) => {
+      // Prepare data for this metric
+      const metricData = filteredData
+        .map(d => ({ date: d.date, value: d[metric.id] || 0 }))
+        .filter(d => d.value !== undefined);
+      
+      // Add line
+      g.append('path')
+        .datum(metricData)
+        .attr('class', `line line-${metric.id}`)
+        .attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', metric.color || d3.schemeTableau10[i % 10])
+        .attr('stroke-width', 2);
+      
+      // Add legend item
+      g.append('circle')
+        .attr('cx', innerWidth + 10)
+        .attr('cy', 20 + i * 25)
+        .attr('r', 6)
+        .attr('fill', metric.color || d3.schemeTableau10[i % 10]);
+      
+      g.append('text')
+        .attr('x', innerWidth + 25)
+        .attr('y', 25 + i * 25)
+        .attr('class', 'legend-text')
+        .text(metric.label || metric.id);
+    });
+    
+    // Add labels
+    g.append('text')
+      .attr('class', 'axis-label')
+      .attr('text-anchor', 'middle')
+      .attr('x', innerWidth / 2)
+      .attr('y', innerHeight + margin.bottom - 10)
+      .text('Date');
+    
+    g.append('text')
+      .attr('class', 'axis-label')
+      .attr('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -innerHeight / 2)
+      .attr('y', -margin.left + 15)
+      .text('Value');
+    
+    // Add brushing
+    const brush = d3.brushX()
+      .extent([[0, 0], [innerWidth, innerHeight]])
+      .on('end', (event) => {
+        if (!event.selection) return;
+        const [x0, x1] = event.selection.map(x.invert);
+        // Here you would dispatch an action to update the time range
+        console.log('Selected time range:', x0, x1);
+        // Reset brush
+        d3.select(brushRef.current).call(brush.move, null);
+      });
+    
+    g.append('g')
+      .attr('class', 'brush')
+      .attr('ref', brushRef)
+      .call(brush);
+    
+    // Add hover effects with vertical line
+    const focus = g.append('g')
+      .attr('class', 'focus')
+      .style('display', 'none');
+    
+    focus.append('line')
+      .attr('class', 'hover-line')
       .attr('y1', 0)
       .attr('y2', innerHeight)
-      .attr('stroke', '#ccc')
-      .attr('stroke-width', 1)
-      .attr('opacity', 0);
-
-    if (showTooltip) {
-      const overlay = svg.append('rect')
-        .attr('width', innerWidth)
-        .attr('height', innerHeight)
-        .attr('fill', 'none')
-        .attr('pointer-events', 'all');
-
-      overlay.on('mousemove', function(event) {
-        const [xPos] = d3.pointer(event);
-        const bisectDate = d3.bisector(d => new Date(d.date)).left;
-        const x0 = xScale.invert(xPos);
-        const i = bisectDate(currentData, x0, 1);
-        const d0 = currentData[i - 1];
-        const d1 = currentData[i];
-        if (!d0 || !d1) return;
-        const dPoint = (x0 - new Date(d0.date)) > (new Date(d1.date) - x0) ? d1 : d0;
-        tooltipLine
-          .attr('x1', xScale(new Date(dPoint.date)))
-          .attr('x2', xScale(new Date(dPoint.date)))
-          .attr('opacity', 1);
+      .style('stroke', theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)')
+      .style('stroke-width', 1)
+      .style('stroke-dasharray', '3,3');
+    
+    const voronoiGroup = g.append('g')
+      .attr('class', 'voronoi');
+    
+    // Create points array with all metrics
+    const points = [];
+    filteredData.forEach(d => {
+      metrics.forEach(metric => {
+        if (d[metric.id] !== undefined) {
+          points.push({
+            date: new Date(d.date),
+            metric: metric.id,
+            value: d[metric.id],
+            color: metric.color || d3.schemeTableau10[metrics.indexOf(metric) % 10],
+            label: metric.label || metric.id,
+            originalData: d
+          });
+        }
+      });
+    });
+    
+    // Create voronoi diagram for better mouse interaction
+    const voronoi = d3.Delaunay
+      .from(points, d => x(d.date), d => y(d.value))
+      .voronoi([0, 0, innerWidth, innerHeight]);
+    
+    voronoiGroup.selectAll('path')
+      .data(points)
+      .enter()
+      .append('path')
+      .attr('d', (d, i) => voronoi.renderCell(i))
+      .style('fill', 'none')
+      .style('pointer-events', 'all')
+      .on('mouseover', (event, d) => {
+        focus.style('display', null);
+        focus.select('.hover-line')
+          .attr('x1', x(d.date))
+          .attr('x2', x(d.date));
+        
+        setHoveredDate(d.originalData);
+        
         tooltip
           .style('opacity', 1)
           .style('left', `${event.pageX + 10}px`)
           .style('top', `${event.pageY - 28}px`)
           .html(`
-            <div class="chart-tooltip-title">${new Date(dPoint.date).toLocaleDateString()}</div>
-            ${activeMetrics.map(metric => `
-              <div class="chart-tooltip-value">
-                <span style="color:${colorMap[metric]}">${metric.charAt(0).toUpperCase() + metric.slice(1)}:</span>
-                <span>${(dPoint[metric] || 0).toLocaleString()}</span>
-              </div>
-            `).join('')}
+            <strong>${formatDate(d.date)}</strong><br/>
+            ${metrics.map(m => `${m.label || m.id}: ${formatNumber(d.originalData[m.id] || 0)}`).join('<br/>')}
           `);
       })
-      .on('mouseleave', function() {
-        tooltipLine.attr('opacity', 0);
+      .on('mousemove', (event) => {
+        tooltip
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 28}px`);
+      })
+      .on('mouseout', () => {
+        focus.style('display', 'none');
+        setHoveredDate(null);
         tooltip.style('opacity', 0);
       });
-    }
+    
+  }, [data, width, height, margin, scales, metrics, innerWidth, innerHeight, theme]);
 
-    // Draw lines and areas for each active metric
-    activeMetrics.forEach(metric => {
-      // Prepare data for the metric
-      const metricData = currentData.map(d => ({
-        date: d.date,
-        value: d[metric] || 0
-      }));
-      // Draw area
-      svg.append('path')
-        .datum(metricData)
-        .attr('class', `area area-${metric}`)
-        .attr('d', area)
-        .attr('fill', colorMap[metric])
-        .attr('opacity', 0.2);
-      // Draw line
-      svg.append('path')
-        .datum(metricData)
-        .attr('class', `line line-${metric}`)
-        .attr('fill', 'none')
-        .attr('stroke', colorMap[metric])
-        .attr('stroke-width', 2)
-        .attr('d', line);
-    });
-
-    // Add brush for date range selection if enabled
-    if (enableBrush && brushRef.current) {
-      const brush = d3.brushX()
-        .extent([[0, 0], [innerWidth, innerHeight]])
-        .on('end', (event) => {
-          if (!event.selection) return;
-          const [x0, x1] = event.selection.map(xScale.invert);
-          console.log('Selected date range:', x0, x1);
-        });
-      svg.append('g')
-        .attr('class', 'brush')
-        .call(brush);
-    }
-
-    // If data is insufficient, display a message
-    if (currentData.length <= 1) {
-      svg.append('text')
-        .attr('x', innerWidth / 2)
-        .attr('y', innerHeight / 2)
-        .attr('text-anchor', 'middle')
-        .text('Insufficient data available');
-    }
-  }, [currentData, width, height, margin, activeMetrics, colorMap, enableBrush, showTooltip, isMobile]);
+  if (!data || data.length === 0) {
+    return <div className="chart-placeholder">No data available</div>;
+  }
 
   return (
-    <div className="chart-container">
-      <div className="chart-header">
-        <h3>{title}</h3>
-      </div>
-      <div className="chart-body">
-        <div className="chart line-chart">
-          <svg ref={svgRef}></svg>
-          {showTooltip && (
-            <div ref={tooltipRef} className="chart-tooltip" style={{ opacity: 0 }}></div>
-          )}
-          {enableBrush && <div ref={brushRef} style={{ display: 'none' }}></div>}
-        </div>
-        <div className="chart-legend">
-          {metrics.map(metric => (
-            <div 
-              key={metric}
-              className={`legend-item ${activeMetrics.includes(metric) ? '' : 'disabled'}`}
-              onClick={() => toggleMetric(metric)}
-            >
-              <div 
-                className="legend-color" 
-                style={{ backgroundColor: colorMap[metric] }}
-              ></div>
-              <span className="legend-text">
-                {metric.charAt(0).toUpperCase() + metric.slice(1)}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="line-chart-container">
+      <svg ref={chartRef} className="line-chart"></svg>
+      <div ref={tooltipRef} className="chart-tooltip"></div>
     </div>
   );
 };
 
-export default React.memo(MergedLineChart);
+export default React.memo(LineChart);

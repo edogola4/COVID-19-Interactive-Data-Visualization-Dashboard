@@ -1,7 +1,7 @@
 // src / compnents / layout / Header.js
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleTheme } from '../../redux/actions/uiActions';
+import { toggleThemeAction } from '../../redux/actions/uiActions';
 import '../../styles/components/layout.css';
 
 const Header = () => {
@@ -9,7 +9,7 @@ const Header = () => {
   const { darkMode } = useSelector(state => state.ui);
   
   const handleThemeToggle = () => {
-    dispatch(toggleTheme());
+    dispatch(toggleThemeAction());
   };
   
   return (

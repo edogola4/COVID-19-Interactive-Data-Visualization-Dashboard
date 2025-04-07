@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchGlobalData, fetchCountriesData } from '../../redux/actions/dataActions';
+
 import StatisticsPanel from './StatisticsPanel';
 import CountrySelector from './CountrySelector';
 import DateRangePicker from './DateRangePicker';

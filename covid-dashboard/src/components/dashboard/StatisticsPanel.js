@@ -2,11 +2,11 @@
 import React from 'react';
 // eslint-disable-next-line no-unused-vars
 import Card from '../common/Card';
-import { formatNumber, calculatePercentageChange } from '../../utils/formatters';
+import { formatNumber, calculateGrowthRate } from '../../utils/formatters';
 import '../../styles/components/dashboard.css';
 
 const StatisticItem = ({ label, value, previousValue, className }) => {
-  const percentChange = previousValue ? calculatePercentageChange(value, previousValue) : null;
+  const percentChange = previousValue ? calculateGrowthRate(value, previousValue) : null;
   
   return (
     <div className={`statistic-item ${className}`}>

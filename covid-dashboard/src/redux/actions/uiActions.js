@@ -79,3 +79,21 @@ import {
   export const clearGlobalError = () => (dispatch) => {
     dispatch(clearError());
   };
+
+  // Action type
+export const SET_SELECTED_COUNTRY = 'SET_SELECTED_COUNTRY';
+
+// Action creator
+export const setSelectedCountry = (country) => ({
+  type: SET_SELECTED_COUNTRY,
+  payload: country,
+});
+
+// Define action type
+export const SET_DATE_RANGE = 'SET_DATE_RANGE';
+
+// Define and export the action creator
+export const setDateRange = (range) => ({
+  type: SET_DATE_RANGE,
+  payload: range,
+});
