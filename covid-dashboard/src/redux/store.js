@@ -4,16 +4,13 @@ import dataReducer from './reducers/dataReducer';
 import uiReducer from './reducers/uiReducer';
 import { createSelector } from 'reselect';
 
-
-
-// Base selectors
-const getGlobalData = state => state.data.globalData;
-const getCountriesData = state => state.data.countriesData;
-const getHistoricalData = state => state.data.historicalData;
-const getSelectedCountry = state => state.ui.selectedCountry;
-const getDateRange = state => state.ui.dateRange;
-const getActiveMetric = state => state.ui.activeMetric;
-
+// Updated base selectors to match your actual state structure
+const getGlobalData = state => state.data.global.data;
+const getCountriesData = state => state.data.countries.list;
+const getHistoricalData = state => state.data.historical.global;
+const getSelectedCountry = state => state.data.selectedCountry;
+const getDateRange = state => state.data.dateRange;
+const getActiveMetric = state => state.data.filters.metric;
 
 const store = configureStore({
   reducer: {
@@ -28,9 +25,6 @@ const store = configureStore({
       serializableCheck: false, // Disable for handling non-serializable data like Date objects
     }),
 });
-
-
-
 
 // Get sorted countries data
 export const getSortedCountriesData = createSelector(
@@ -120,7 +114,7 @@ export const getFilteredHistoricalData = createSelector(
 export const getSelectedCountryData = createSelector(
   [getCountriesData, getSelectedCountry],
   (countriesData, selectedCountry) => {
-    if (!selectedCountry || !countriesData || !countriesData.length) return null;
+    if (!selectedCountry || selectedCountry === 'all' || !countriesData || !countriesData.length) return null;
     
     return countriesData.find(country => country.country === selectedCountry);
   }
@@ -130,9 +124,8 @@ export const getSelectedCountryData = createSelector(
 export const getCurrentViewData = createSelector(
   [getGlobalData, getSelectedCountryData, getSelectedCountry],
   (globalData, selectedCountryData, selectedCountry) => {
-    return selectedCountry ? selectedCountryData : globalData;
+    return selectedCountry === 'all' ? globalData : selectedCountryData;
   }
 );
-
 
 export default store;
