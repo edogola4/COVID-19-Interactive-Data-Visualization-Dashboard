@@ -23,10 +23,12 @@ export const fetchGlobalData = () => async (dispatch) => {
     const data = await api.fetchGlobalData();
     dispatch(fetchGlobalDataSuccess(data));
     dispatch(setLastUpdated(new Date().toISOString()));
-    return data;
+    return { success: true, data };
   } catch (error) {
-    dispatch(fetchGlobalDataFailure(error.message));
-    throw error;
+    console.error('Error fetching global data:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Unable to fetch global data';
+    dispatch(fetchGlobalDataFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -37,10 +39,12 @@ export const fetchAllCountriesData = () => async (dispatch) => {
     const data = await api.fetchAllCountries();
     dispatch(fetchCountriesSuccess(data));
     dispatch(setLastUpdated(new Date().toISOString()));
-    return data;
+    return { success: true, data };
   } catch (error) {
-    dispatch(fetchCountriesFailure(error.message));
-    throw error;
+    console.error('Error fetching countries data:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Unable to fetch countries data';
+    dispatch(fetchCountriesFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -54,16 +58,17 @@ export const fetchHistoricalData = (country = 'all', days = 30) => async (dispat
     } else {
       data = await api.fetchHistoricalCountryData(country, days);
     }
-    
     dispatch(fetchHistoricalSuccess({
       country,
       data,
     }));
     dispatch(setLastUpdated(new Date().toISOString()));
-    return data;
+    return { success: true, data };
   } catch (error) {
-    dispatch(fetchHistoricalFailure(error.message));
-    throw error;
+    console.error('Error fetching historical data:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Unable to fetch historical data';
+    dispatch(fetchHistoricalFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -77,33 +82,44 @@ export const fetchVaccineData = (country = 'all') => async (dispatch) => {
     } else {
       data = await api.fetchCountryVaccineData(country);
     }
-    
     dispatch(fetchVaccineSuccess({
       country,
       data,
     }));
     dispatch(setLastUpdated(new Date().toISOString()));
-    return data;
+    return { success: true, data };
   } catch (error) {
-    dispatch(fetchVaccineFailure(error.message));
-    throw error;
+    console.error('Error fetching vaccine data:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Unable to fetch vaccine data';
+    dispatch(fetchVaccineFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
 // Fetch all necessary data for the dashboard
 export const fetchDashboardData = (country = 'all') => async (dispatch) => {
   try {
-    // Fetch data in parallel for better performance
-    await Promise.all([
+    // Better error handling for parallel requests
+    const results = await Promise.allSettled([
       dispatch(fetchGlobalData()),
       dispatch(fetchAllCountriesData()),
       dispatch(fetchHistoricalData(country)),
       dispatch(fetchVaccineData(country)),
     ]);
     
-    return true;
+    // Check if any of the requests failed
+    const failedRequests = results
+      .filter(result => result.status === 'fulfilled' && result.value.success === false)
+      .map(result => result.value.error);
+    
+    if (failedRequests.length > 0) {
+      console.warn('Some dashboard data requests failed:', failedRequests);
+      return { success: false, errors: failedRequests };
+    }
+    
+    return { success: true };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    return false;
+    return { success: false, error: error.message || 'Failed to load dashboard data' };
   }
 };

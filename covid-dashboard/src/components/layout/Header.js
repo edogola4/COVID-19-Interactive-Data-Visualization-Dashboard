@@ -13,35 +13,42 @@ const Header = () => {
   };
   
   return (
-    <header className="app-header">
-      <div className="logo-container">
-        <span className="logo">COVID-19 Tracker</span>
-      </div>
-      
-      <nav className="main-nav">
-        <ul>
-          <li><a href="#dashboard" className="active">Dashboard</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#resources">Resources</a></li>
-        </ul>
-      </nav>
-      
-      <div className="header-actions">
-        <button 
-          className="theme-toggle" 
-          onClick={handleThemeToggle}
-          aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
-        >
-          {darkMode ? '☀️' : '🌙'}
-        </button>
+    <header className="header">
+      <div className="header-container">
+        <div className="logo">
+          <img src="/covid-icon.svg" alt="COVID-19" className="logo-icon" />
+          <span className="logo-text">COVID-19 Tracker</span>
+        </div>
         
-        <select className="data-source-selector">
-          <option value="jhu">Johns Hopkins University</option>
-          <option value="who">World Health Organization</option>
-        </select>
+        <nav className="nav-links">
+          <a href="#dashboard" className="nav-link active">Dashboard</a>
+          <a href="#about" className="nav-link">About</a>
+          <a href="#resources" className="nav-link">Resources</a>
+        </nav>
         
-        <div className="last-updated">
-          Last updated: {new Date().toLocaleString()}
+        <div className="header-actions">
+          <div className="data-source-wrapper">
+            <select className="data-source-selector">
+              <option value="jhu">Johns Hopkins University</option>
+              <option value="who">World Health Organization</option>
+            </select>
+          </div>
+          
+          <div className="last-updated">
+            Last updated: {new Date().toLocaleString()}
+          </div>
+          
+          <button
+            className="theme-toggle"
+            onClick={handleThemeToggle}
+            aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+          
+          <button className="mobile-menu-button" aria-label="Toggle mobile menu">
+            <span className="material-icons">menu</span>
+          </button>
         </div>
       </div>
     </header>
