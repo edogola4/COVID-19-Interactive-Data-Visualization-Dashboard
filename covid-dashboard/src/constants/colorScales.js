@@ -120,5 +120,6 @@ export const colorScales = {
   generateColorRange,
   createLogScale
 };
+export const COLOR_SCALES = colorScales;
 
 export default colorScales
