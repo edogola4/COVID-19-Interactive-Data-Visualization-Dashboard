@@ -18,7 +18,14 @@ import '../../styles/components/dashboard.css';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
+
   
+<DateRangePicker 
+  onChange={handleDateRangeChange} 
+  startDate={dateRange?.start}
+  endDate={dateRange?.end}
+/>
+
   // Correctly access data from the Redux store based on your actual reducer structure
   const { 
     global,
@@ -127,6 +134,17 @@ const Dashboard = () => {
       type: 'data/setMetric', 
       payload: metric 
     });
+  };
+
+
+  const initialState = {
+    // other state...
+    dateRange: {
+      start: null,
+      end: null,
+      preset: 30  // Default to 30 days
+    },
+    // other state...
   };
   
   if (isLoading && !global.data) {
