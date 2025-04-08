@@ -1,129 +1,227 @@
 /* src/styles/components/sidebar.css */
-@import '../variables.css';
+/*@import '../variables.css';*/
+
+/* src/styles/components/sidebar.css */
+:root {
+  --sidebar-width: 280px;
+  --sidebar-bg: #f8f9fa;
+  --sidebar-border: #e9ecef;
+  --sidebar-text: #343a40;
+  --sidebar-active: #4361ee;
+  --sidebar-hover-bg: #e9ecef;
+  --btn-primary: #4361ee;
+  --btn-primary-hover: #3a56d4;
+  --btn-secondary: #6c757d;
+  --btn-secondary-hover: #5a6268;
+  --transition-speed: 0.3s;
+  --header-bg: #343a40;
+  --header-text: #f8f9fa;
+}
+
+/* Dark mode variables - can be enabled through user preferences */
+[data-theme="dark"] {
+  --sidebar-bg: #212529;
+  --sidebar-border: #343a40;
+  --sidebar-text: #e9ecef;
+  --sidebar-active: #4cc9f0;
+  --sidebar-hover-bg: #343a40;
+  --header-bg: #121212;
+  --header-text: #f8f9fa;
+}
 
 /* Sidebar Toggle Button */
 .sidebar-toggle {
   position: fixed;
-  top: var(--header-height);
-  left: 16px;
-  background-color: var(--primary-color);
+  top: 1rem;
+  left: 1rem;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border: none;
-  color: var(--text-white);
-  font-size: 1.5rem;
-  padding: 0.5rem;
-  border-radius: 50%;
-  z-index: 1100;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  border-radius: 8px;
+  background-color: var(--btn-primary);
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-toggle:hover {
-  background-color: var(--primary-dark);
-  transform: scale(1.1);
+  background-color: var(--btn-primary-hover);
+}
+
+@media (min-width: 992px) {
+  .sidebar-toggle {
+    display: none;
+  }
 }
 
 /* Sidebar Container */
 .sidebar {
   position: fixed;
-  top: var(--header-height);
+  top: 0;
   left: 0;
+  bottom: 0;
   width: var(--sidebar-width);
-  height: calc(100vh - var(--header-height));
-  background-color: var(--background-card);
-  box-shadow: var(--shadow-light);
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-speed) ease;
+  z-index: 1040;
   overflow-y: auto;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
-.sidebar.open {
-  transform: translateX(0);
+/* Hide sidebar by default on mobile */
+@media (max-width: 991px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
 }
 
-/* Header */
+/* Sidebar Header */
 .sidebar-header {
-  padding: var(--spacing-lg);
-  background: var(--primary-color);
-  color: var(--text-white);
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  background-color: var(--header-bg);
+  color: var(--header-text);
 }
 
-/* Navigation */
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Navigation Section */
 .sidebar-nav {
-  padding: var(--spacing-md);
+  flex: 1;
+  padding: 1rem 0;
 }
 
 .nav-section {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  color: var(--sidebar-text);
+}
+
+.section-icon {
+  margin-right: 10px;
+  font-size: 1rem;
 }
 
 .nav-section h3 {
-  margin-bottom: var(--spacing-md);
-  font-size: var(--font-size-md);
-  color: var(--primary-color);
-  border-bottom: 1px solid var(--primary-light);
-  padding-bottom: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sidebar-text);
+  opacity: 0.8;
 }
 
 .nav-section ul {
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
 .nav-section li {
-  margin-bottom: var(--spacing-sm);
+  margin: 2px 0;
 }
 
 .nav-section a {
   display: block;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-sm);
-  color: var(--text-primary);
+  padding: 0.75rem 1.5rem 0.75rem 2.5rem;
+  color: var(--sidebar-text);
   text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 0.95rem;
+  transition: all var(--transition-speed);
+  border-left: 3px solid transparent;
 }
 
-.nav-section a:hover,
+.nav-section a:hover {
+  background-color: var(--sidebar-hover-bg);
+}
+
 .nav-section a.active {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  color: var(--sidebar-active);
+  border-left: 3px solid var(--sidebar-active);
+  font-weight: 500;
 }
 
-/* Footer Actions */
+/* Sidebar Footer */
 .sidebar-footer {
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--primary-light);
-  text-align: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .action-btn {
-  display: block;
-  width: 100%;
-  padding: var(--spacing-sm) 0;
-  margin-bottom: var(--spacing-sm);
-  background-color: var(--primary-color);
-  color: var(--text-white);
+  padding: 0.75rem 1rem;
   border: none;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-sm);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-speed);
 }
 
-.action-btn:hover {
-  background-color: var(--primary-dark);
+.save-btn {
+  background-color: var(--btn-primary);
+  color: white;
 }
 
-/* Responsive behavior */
-@media (max-width: 992px) {
-  .sidebar {
-    width: 250px; /* Maintain a usable width on smaller screens */
+.save-btn:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+.export-btn {
+  background-color: var(--btn-secondary);
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: var(--btn-secondary-hover);
+}
+
+/* Adjustments for main content */
+@media (min-width: 992px) {
+  .main-content {
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-speed);
   }
 }
 
-@media (max-width: 768px) {
-  .sidebar-toggle {
-    left: 12px;
-  }
+/* Scrollbar Styling */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: var(--sidebar-bg);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: var(--sidebar-border);
+  border-radius: 4px;
 }
