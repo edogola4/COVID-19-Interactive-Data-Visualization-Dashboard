@@ -1,5 +1,4 @@
 // src/api/mockData.js
-// a mock data file to use as a fallback when the API is unreachable
 export const mockGlobalData = {
     updated: Date.now(),
     cases: 775230420,
