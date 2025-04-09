@@ -1,10 +1,16 @@
 // src/api/service.js
 import axios from 'axios';
 import { ENDPOINTS } from '../constants/apiEndpoints';
+import { 
+  mockGlobalData,
+  mockCountriesData,
+  mockHistoricalData,
+  mockVaccineData
+} from './mockData';
 
 // Create axios instance with default configurations
 const apiClient = axios.create({
-  timeout: 15000, // 15 seconds timeout - increased for potentially slow API responses
+  timeout: 15000, // 15 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,12 +53,23 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Check if we should use mock data (for development or during API failures)
+const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+
 // Global data service
 export const fetchGlobalData = async () => {
   try {
     const response = await apiClient.get(ENDPOINTS.GLOBAL);
     return response.data;
   } catch (error) {
+    console.error(`Error fetching global data: ${error.message}`);
+    
+    // Use mock data in development or if specifically enabled
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock global data due to API failure');
+      return mockGlobalData;
+    }
+    
     throw new Error(`Error fetching global data: ${error.message}`);
   }
 };
@@ -63,6 +80,13 @@ export const fetchAllCountries = async () => {
     const response = await apiClient.get(ENDPOINTS.COUNTRIES);
     return response.data;
   } catch (error) {
+    console.error(`Error fetching countries data: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock countries data due to API failure');
+      return mockCountriesData;
+    }
+    
     throw new Error(`Error fetching countries data: ${error.message}`);
   }
 };
@@ -76,6 +100,13 @@ export const fetchCountryData = async (country) => {
     const response = await apiClient.get(ENDPOINTS.COUNTRY(country));
     return response.data;
   } catch (error) {
+    console.error(`Error fetching data for ${country}: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn(`Using mock data for country ${country} due to API failure`);
+      return mockCountriesData.find(c => c.country.toLowerCase() === country.toLowerCase()) || mockCountriesData[0];
+    }
+    
     throw new Error(`Error fetching data for ${country}: ${error.message}`);
   }
 };
@@ -86,6 +117,13 @@ export const fetchHistoricalAllData = async (days = 30) => {
     const response = await apiClient.get(ENDPOINTS.HISTORICAL_ALL(days));
     return response.data;
   } catch (error) {
+    console.error(`Error fetching historical global data: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock historical data due to API failure');
+      return mockHistoricalData;
+    }
+    
     throw new Error(`Error fetching historical global data: ${error.message}`);
   }
 };
@@ -99,6 +137,13 @@ export const fetchHistoricalCountryData = async (country, days = 30) => {
     const response = await apiClient.get(ENDPOINTS.HISTORICAL_COUNTRY(country, days));
     return response.data;
   } catch (error) {
+    console.error(`Error fetching historical data for ${country}: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn(`Using mock historical data for country ${country} due to API failure`);
+      return { country, timeline: mockHistoricalData };
+    }
+    
     throw new Error(`Error fetching historical data for ${country}: ${error.message}`);
   }
 };
@@ -109,6 +154,13 @@ export const fetchVaccineData = async () => {
     const response = await apiClient.get(ENDPOINTS.VACCINE);
     return response.data;
   } catch (error) {
+    console.error(`Error fetching vaccine data: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock vaccine data due to API failure');
+      return mockVaccineData;
+    }
+    
     throw new Error(`Error fetching vaccine data: ${error.message}`);
   }
 };
@@ -122,6 +174,13 @@ export const fetchCountryVaccineData = async (country) => {
     const response = await apiClient.get(ENDPOINTS.VACCINE_COUNTRY(country));
     return response.data;
   } catch (error) {
+    console.error(`Error fetching vaccine data for ${country}: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn(`Using mock vaccine data for country ${country} due to API failure`);
+      return { country, timeline: mockVaccineData.timeline };
+    }
+    
     throw new Error(`Error fetching vaccine data for ${country}: ${error.message}`);
   }
 };
@@ -132,6 +191,36 @@ export const fetchContinentsData = async () => {
     const response = await apiClient.get(ENDPOINTS.CONTINENTS);
     return response.data;
   } catch (error) {
+    console.error(`Error fetching continents data: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock continents data due to API failure');
+      // Create mock continent data from countries
+      const continents = {};
+      mockCountriesData.forEach(country => {
+        if (!continents[country.continent]) {
+          continents[country.continent] = {
+            continent: country.continent,
+            cases: 0,
+            deaths: 0,
+            recovered: 0,
+            active: 0,
+            population: 0,
+            countries: []
+          };
+        }
+        
+        continents[country.continent].cases += country.cases;
+        continents[country.continent].deaths += country.deaths;
+        continents[country.continent].recovered += country.recovered;
+        continents[country.continent].active += country.active;
+        continents[country.continent].population += country.population;
+        continents[country.continent].countries.push(country.country);
+      });
+      
+      return Object.values(continents);
+    }
+    
     throw new Error(`Error fetching continents data: ${error.message}`);
   }
 };
@@ -169,6 +258,20 @@ export const fetchDashboardData = async (country = 'all') => {
     };
   } catch (error) {
     console.error('Dashboard data fetch error:', error);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock dashboard data due to API failure');
+      return {
+        current: country === 'all' ? mockGlobalData : 
+          mockCountriesData.find(c => c.country.toLowerCase() === country.toLowerCase()) || mockCountriesData[0],
+        historical: country === 'all' ? mockHistoricalData : 
+          { country, timeline: mockHistoricalData },
+        vaccine: country === 'all' ? mockVaccineData : 
+          { country, timeline: mockVaccineData.timeline },
+        lastUpdated: new Date().toISOString(),
+      };
+    }
+    
     throw new Error(`Error fetching dashboard data: ${error.message}`);
   }
 };
@@ -181,6 +284,15 @@ export const fetchTopCountries = async (limit = 10, sortBy = 'cases') => {
       .sort((a, b) => b[sortBy] - a[sortBy])
       .slice(0, limit);
   } catch (error) {
+    console.error(`Error fetching top countries: ${error.message}`);
+    
+    if (USE_MOCK_DATA) {
+      console.warn('Using mock top countries data due to API failure');
+      return mockCountriesData
+        .sort((a, b) => b[sortBy] - a[sortBy])
+        .slice(0, limit);
+    }
+    
     throw new Error(`Error fetching top countries: ${error.message}`);
   }
 };
