@@ -145,3 +145,10 @@ export const fetchDashboardData = (country = 'all') => async (dispatch) => {
     return { success: false, error: error.message || 'Failed to load dashboard data' };
   }
 };
+
+// OPTION B: Re-export actions for convenience if Dashboard.js still imports them from here
+export { 
+  setSelectedCountry,
+  setDateRange,
+  setMetric
+};
