@@ -1,4 +1,4 @@
-// src / components / dashboard / Dashboard.js
+// src/components/dashboard/Dashboard.js - FIXED VERSION
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import StatisticsPanel from './StatisticsPanel';
@@ -10,7 +10,13 @@ import CountrySelector from './CountrySelector';
 import DateRangePicker from './DateRangePicker';
 import Card from '../common/Card';
 import Loader from '../common/Loader';
-import { fetchDashboardData, fetchAllCountriesData } from '../../redux/actions/dataActions';
+import { 
+  fetchDashboardData, 
+  fetchAllCountriesData,
+  setSelectedCountry,
+  setDateRange,
+  setMetric 
+} from '../../redux/actions/dataActions';
 import { formatDate, formatNumber } from '../../utils/formatters';
 import { transformTimeSeriesData, transformCountryData } from '../../utils/dataTransformers';
 import { COLOR_SCALES } from '../../constants/colorScales';
@@ -18,13 +24,6 @@ import '../../styles/components/dashboard.css';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-
-  
-//<DateRangePicker 
- // onChange={handleDateRangeChange} 
-  //startDate={dateRange?.start}
-  //endDate={dateRange?.end}
-///>
 
   // Correctly access data from the Redux store based on your actual reducer structure
   const { 
@@ -85,7 +84,7 @@ const Dashboard = () => {
   
   // Calculate daily new cases/deaths for line chart
   const dailyNewData = useMemo(() => {
-    if (!processedTimelineData) return null;
+    if (!processedTimelineData || !processedTimelineData.timeline) return null;
     
     const metrics = ['cases', 'deaths', 'recovered'];
     const dailyData = {};
@@ -112,39 +111,22 @@ const Dashboard = () => {
   
   // Handle country selection
   const handleCountrySelect = (country) => {
-    dispatch({ 
-      type: 'data/setSelectedCountry', 
-      payload: country === 'Global' ? 'all' : country 
-    });
+    // Use the action creator instead of dispatching a raw action
+    dispatch(setSelectedCountry(country === 'Global' ? 'all' : country));
     dispatch(fetchDashboardData(country === 'Global' ? 'all' : country));
   };
   
   // Handle date range change
   const handleDateRangeChange = (range) => {
-    dispatch({ 
-      type: 'data/setDateRange', 
-      payload: range 
-    });
+    // Use the action creator instead of dispatching a raw action
+    dispatch(setDateRange(range));
   };
   
   // Handle metric change for different visualizations
   const handleMetricChange = (metric) => {
     setActiveMetric(metric);
-    dispatch({ 
-      type: 'data/setMetric', 
-      payload: metric 
-    });
-  };
-
-
-  const initialState = {
-    // other state...
-    dateRange: {
-      start: null,
-      end: null,
-      preset: 30  // Default to 30 days
-    },
-    // other state...
+    // Use the action creator instead of dispatching a raw action
+    dispatch(setMetric(metric));
   };
   
   if (isLoading && !global.data) {
@@ -189,8 +171,8 @@ const Dashboard = () => {
           
           <DateRangePicker 
             onChange={handleDateRangeChange} 
-            startDate={dateRange.start}
-            endDate={dateRange.end}
+            startDate={dateRange?.start}
+            endDate={dateRange?.end}
           />
           
           <div className="metric-selector">
@@ -236,7 +218,7 @@ const Dashboard = () => {
         {/* Only render timeline chart if data is available */}
         {processedTimelineData && processedTimelineData.timeline && (
           <Card title={`${selectedCountry === 'all' ? 'Global' : selectedCountry} - ${activeMetric.charAt(0).toUpperCase() + activeMetric.slice(1)} Over Time`} className="timeline-card grid-span-2">
-            {processedTimelineData.timeline[activeMetric] ? (
+            {processedTimelineData.timeline?.[activeMetric] ? (
               <LineChart 
                 data={Object.entries(processedTimelineData.timeline[activeMetric]).map(([date, value]) => ({
                   date,
@@ -246,7 +228,7 @@ const Dashboard = () => {
                 xLabel="Date"
                 yLabel={activeMetric.charAt(0).toUpperCase() + activeMetric.slice(1)}
                 title=""
-                colors={[COLOR_SCALES[activeMetric][1]]}
+                colors={[COLOR_SCALES[activeMetric]?.[1] || '#4285F4']}
                 height={350}
               />
             ) : (

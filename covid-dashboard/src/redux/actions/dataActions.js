@@ -1,4 +1,4 @@
-// src/redux/actions/dataActions.js
+// src/redux/actions/dataActions.js - FIXED VERSION
 import * as api from '../../api';
 import {
   fetchGlobalDataStart,
@@ -13,6 +13,9 @@ import {
   fetchVaccineStart,
   fetchVaccineSuccess,
   fetchVaccineFailure,
+  setSelectedCountry,
+  setDateRange,
+  setMetric
 } from '../reducers/dataReducer';
 import { setLastUpdated } from '../reducers/uiReducer';
 
@@ -54,7 +57,7 @@ export const fetchHistoricalData = (country = 'all', days = 30) => async (dispat
   try {
     let data;
     if (country === 'all') {
-      data = await api.fetchHistoricalAllData();
+      data = await api.fetchHistoricalAllData(days);
     } else {
       data = await api.fetchHistoricalCountryData(country, days);
     }
@@ -99,27 +102,46 @@ export const fetchVaccineData = (country = 'all') => async (dispatch) => {
 // Fetch all necessary data for the dashboard
 export const fetchDashboardData = (country = 'all') => async (dispatch) => {
   try {
-    // Better error handling for parallel requests
-    const results = await Promise.allSettled([
-      dispatch(fetchGlobalData()),
-      dispatch(fetchAllCountriesData()),
-      dispatch(fetchHistoricalData(country)),
-      dispatch(fetchVaccineData(country)),
-    ]);
+    // First, get the dashboard data from the API
+    const dashboardData = await api.fetchDashboardData(country);
     
-    // Check if any of the requests failed
-    const failedRequests = results
-      .filter(result => result.status === 'fulfilled' && result.value.success === false)
-      .map(result => result.value.error);
-    
-    if (failedRequests.length > 0) {
-      console.warn('Some dashboard data requests failed:', failedRequests);
-      return { success: false, errors: failedRequests };
+    // Now dispatch individual actions to update the store with the received data
+    if (dashboardData.current) {
+      if (country === 'all') {
+        dispatch(fetchGlobalDataSuccess(dashboardData.current));
+      } else {
+        // If we're not updating countries list here, at least make sure we have the currently selected country
+        const countryData = dashboardData.current;
+        // This could be improved by updating only the specific country in the list
+        dispatch(fetchCountriesSuccess([countryData]));
+      }
     }
+    
+    if (dashboardData.historical) {
+      dispatch(fetchHistoricalSuccess({
+        country,
+        data: dashboardData.historical
+      }));
+    }
+    
+    if (dashboardData.vaccine) {
+      dispatch(fetchVaccineSuccess({
+        country,
+        data: dashboardData.vaccine
+      }));
+    }
+    
+    dispatch(setLastUpdated(dashboardData.lastUpdated || new Date().toISOString()));
     
     return { success: true };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
+    // Dispatch failure actions
+    dispatch(fetchGlobalDataFailure(error.message));
+    dispatch(fetchCountriesFailure(error.message));
+    dispatch(fetchHistoricalFailure(error.message));
+    dispatch(fetchVaccineFailure(error.message));
+    
     return { success: false, error: error.message || 'Failed to load dashboard data' };
   }
 };
