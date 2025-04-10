@@ -7,7 +7,12 @@
   overflow-y: auto;
   background-color: var(--background-main);
 }
-
+.dashboard-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
 .dashboard-header {
   margin-bottom: var(--spacing-lg);
 }
@@ -42,7 +47,7 @@
   margin-bottom: var(--spacing-lg);
 }
 
-.stats-card {
+/*.stats-card {
   height: 140px;
   padding: var(--spacing-md);
   display: flex;
@@ -50,6 +55,13 @@
   justify-content: space-between;
   border-radius: var(--border-radius-md);
   transition: transform var(--transition-medium);
+}*/
+.stats-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
 .stats-card:hover {

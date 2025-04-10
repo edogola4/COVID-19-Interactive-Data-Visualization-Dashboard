@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { formatNumber } from '../../utils/formatters';
 import { colorScales } from '../../constants/colorScales';
 import '../../styles/components/charts.css';
+import { geoPath, geoMercator } from 'd3-geo';
+
 
 const WorldMap = ({
   data,
