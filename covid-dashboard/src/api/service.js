@@ -54,7 +54,9 @@ apiClient.interceptors.request.use(
 );
 
 // Check if we should use mock data (for development or during API failures)
-const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+//const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+const USE_MOCK_DATA = false;
+
 
 // Global data service
 export const fetchGlobalData = async () => {
